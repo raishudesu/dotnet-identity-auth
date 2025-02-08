@@ -36,7 +36,7 @@ public class UserTaskService
             return await _context.UserTasks.FindAsync(id);
 
         }
-        catch (DbUpdateException ex)
+        catch (Exception ex)
         {
 
             throw new ApplicationException("Error retrieving user task", ex);

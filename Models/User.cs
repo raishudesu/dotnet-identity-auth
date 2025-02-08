@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace dotnet_authentication.Models
 {
@@ -10,5 +11,6 @@ namespace dotnet_authentication.Models
 
         // for one-to-many relation
         public virtual ICollection<UserTask> UserTasks { get; set; } = new List<UserTask>();
+
     }
 }

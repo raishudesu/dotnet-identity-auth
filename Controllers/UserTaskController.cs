@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using dotnet_authentication.Models;
 using dotnet_authentication.Services;
+using Microsoft.AspNetCore.Authorization;
 
 [ApiController]
 [Route("[controller]")]
@@ -14,6 +15,7 @@ public class UserTaskController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<ActionResult<List<UserTask>>> GetAll()
     {
         var userTasks = await _userTaskService.GetUserTasks();
@@ -21,6 +23,7 @@ public class UserTaskController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize]
     public async Task<ActionResult<UserTask>> GetById(Guid id)
     {
         var userTask = await _userTaskService.GetUserTaskById(id);
