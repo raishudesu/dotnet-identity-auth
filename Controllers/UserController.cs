@@ -6,8 +6,16 @@ using Microsoft.AspNetCore.Authorization;
 [ApiController]
 [Route("[controller]")]
 
+
+
 public class UserController : ControllerBase
 {
+    public enum RoleTypes
+    {
+        User,
+        Admin
+    }
+
     private readonly UserService _userService;
 
     public UserController(UserService userService)
@@ -16,6 +24,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = nameof(RoleTypes.Admin))]
     public async Task<ActionResult<List<User>>> GetAll()
     {
         var users = await _userService.GetUsers();

@@ -30,14 +30,17 @@ namespace dotnet_authentication.Controllers
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly JwtSettings _jwtSettings;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
         public AuthController(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
+            RoleManager<IdentityRole> roleManager,
             IOptions<JwtSettings> jwtSettings)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _roleManager = roleManager;
             _jwtSettings = jwtSettings.Value;
         }
 
@@ -63,8 +66,14 @@ namespace dotnet_authentication.Controllers
 
             if (result.Succeeded)
             {
+
                 var user = await _userManager.FindByEmailAsync(request.Email);
-                var token = GenerateJwtToken(user!);
+
+                var roles = await _userManager.GetRolesAsync(user!);
+
+
+
+                var token = GenerateJwtToken(user!, roles);
 
                 return Ok(new
                 {
@@ -77,25 +86,30 @@ namespace dotnet_authentication.Controllers
             return BadRequest("Invalid login attempt");
         }
 
-        private string GenerateJwtToken(User user)
+        private string GenerateJwtToken(User user, IList<string> roles)
         {
-            var claims = new[]
+            var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Email, user.Email!),
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-                // Add additional claims as needed
+            new Claim(ClaimTypes.Email, user.Email!),
+            new Claim(ClaimTypes.NameIdentifier, user.Id)
             };
+
+            // Add roles to claims
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var expires = DateTime.Now.AddMinutes(_jwtSettings.ExpirationInMinutes);
 
             var token = new JwtSecurityToken(
-                issuer: _jwtSettings.Issuer,
-                audience: _jwtSettings.Audience,
-                claims: claims,
-                expires: expires,
-                signingCredentials: credentials
+            issuer: _jwtSettings.Issuer,
+            audience: _jwtSettings.Audience,
+            claims: claims,
+            expires: expires,
+            signingCredentials: credentials
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
